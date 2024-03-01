@@ -17,4 +17,7 @@
 /src/*.log
 
 # Tokens
-/src/token
+/.env
+/test/
+/command.txt
+/Dockerfile
