@@ -72,13 +72,13 @@ async def process_cafe2_notification(context: ContextTypes.DEFAULT_TYPE, chat_id
     food_data = database.get_cafe2_menu(int(day.strftime('%y%m%d')))
     if food_data:
         message = '{today.month}월 {today.day}일 식단\n'.format(today=day)
-        message += (f"점심: {food_data[0]} `{food_data[1]}`\n"
-                    f"{food_data[2]}\n")
+        message += (f"점심: {food_data['menu1_name']} `{food_data['menu1_price']}`\n"
+                    f"{food_data['menu1_side']}\n")
         if food_data[3] != '간단 snack':
-            message += (f"점심: {food_data[3]} `{food_data[4]}`\n"
-                        f"{food_data[5]}\n")
-        message += (f"저녁: {food_data[6]} `{food_data[7]}`\n"
-                    f"{food_data[8]}\n")
+            message += (f"점심: {food_data['menu2_name']} `{food_data['menu2_price']}`\n"
+                        f"{food_data['menu2_side']}\n")
+        message += (f"저녁: {food_data['dinner_name']} `{food_data['dinner_price']}`\n"
+                    f"{food_data['dinner_side']}\n")
         await context.bot.send_message(
             chat_id=chat_id,
             text=message
@@ -101,8 +101,8 @@ async def process_tepark_notification(context: ContextTypes.DEFAULT_TYPE, chat_i
     if food_data:
         await context.bot.send_photo(
             chat_id=chat_id,
-            photo=food_data[1],
-            caption=food_data[0]
+            photo=food_data['img_link'],
+            caption=food_data['title']
         )
     else:
         await context.bot.send_message(

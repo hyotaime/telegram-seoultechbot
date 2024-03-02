@@ -38,7 +38,7 @@ if __name__ == '__main__':
     scheduler = AsyncIOScheduler()
     scheduler.start()
     scheduler.add_job(univ_schedule, 'cron', hour=0, minute=0, args=(application,), id='scheduler_univ_schedule')
-    scheduler.add_job(scheduler_food, 'cron', hour='9-12', minute=0, args=(application,), id='scheduler_food')
+    scheduler.add_job(scheduler_food, 'cron', day_of_week='mon-fri', hour='9-12', minute=0, args=(application,), id='scheduler_food')
     a, b = 'notice', 'university'
     noticecrawler.get_notice(a, b)
     a, b = 'matters', 'affairs'
