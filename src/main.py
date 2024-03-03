@@ -5,6 +5,7 @@ import telegram as tel
 from telegram.ext import CommandHandler, ApplicationBuilder, CallbackQueryHandler
 import os
 from dotenv import load_dotenv
+import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from commands import start, help, food, weather, dorm, ping, callback
 from crawlers import foodcrawler, noticecrawler
@@ -17,13 +18,12 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = tel.Bot(token=BOT_TOKEN)
 
 
-async def univ_schedule(application):
-    await schedule_notification.schedule_notification(application)
-
-
-async def scheduler_food(application):
+async def scheduler_hour(application):
+    if datetime.datetime.now().hour == 0:
+        await schedule_notification.schedule_notification(application)
     await foodcrawler.food_crawling()
     await food.process_food_notification(application)
+    await noticecrawler.process_notice_crawling(application)
 
 
 async def scheduler_notice(application):
@@ -37,8 +37,7 @@ if __name__ == '__main__':
     database.db_test()
     scheduler = AsyncIOScheduler()
     scheduler.start()
-    scheduler.add_job(univ_schedule, 'cron', hour=0, minute=0, args=(application,), id='scheduler_univ_schedule')
-    scheduler.add_job(scheduler_food, 'cron', day_of_week='mon-fri', hour='9-12', minute=0, args=(application,), id='scheduler_food')
+    scheduler.add_job(scheduler_hour, 'cron', minute=0, args=(application,), id='scheduler_hour')
     a, b = 'notice', 'university'
     noticecrawler.get_notice(a, b)
     a, b = 'matters', 'affairs'

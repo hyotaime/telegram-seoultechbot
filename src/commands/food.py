@@ -112,8 +112,9 @@ async def process_tepark_notification(context: ContextTypes.DEFAULT_TYPE, chat_i
 
 
 async def process_food_notification(context: ContextTypes.DEFAULT_TYPE):
-    time_now = datetime.datetime.now().strftime('%H')
-    chat_ids = database.get_food_noti_id(time_now)
-    for chat_id in chat_ids:
-        await process_cafe2_notification(context, chat_id['id'], datetime.datetime.now(), '오늘')
-        await process_tepark_notification(context, chat_id['id'], datetime.datetime.now())
+    if datetime.datetime.now().weekday() < 5:
+        time_now = datetime.datetime.now().strftime('%H')
+        chat_ids = database.get_food_noti_id(time_now)
+        for chat_id in chat_ids:
+            await process_cafe2_notification(context, chat_id['id'], datetime.datetime.now(), '오늘')
+            await process_tepark_notification(context, chat_id['id'], datetime.datetime.now())
