@@ -164,7 +164,6 @@ def set_cafe2_menu(cur, basedate, menu1_name, menu1_price, menu1_side, menu2_nam
             basedate, menu1_name, menu1_price, menu1_side, menu2_name, menu2_price, menu2_side, dinner_name,
             dinner_price,
             dinner_side))
-        logger.info('제2학생회관 크롤링 성공!')
     except pymysql.IntegrityError:
         sql = '''
             UPDATE cafeteria_2
@@ -173,17 +172,14 @@ def set_cafe2_menu(cur, basedate, menu1_name, menu1_price, menu1_side, menu2_nam
         '''
         cur.execute(sql, (
             menu1_name, menu1_price, menu1_side, menu2_name, menu2_price, menu2_side, dinner_name, dinner_price,
-            dinner_side, basedate))
-
-        logger.info('제2학생회관 크롤링 성공!')
-
+            dinner_side, basedate,))
     sql = '''
         SELECT COUNT(year_month_date)
         FROM cafeteria_2
     '''
     cur.execute(sql)
     count = cur.fetchall()[0]['COUNT(year_month_date)']
-    while count > 4:
+    while count > 5:
         sql = '''
             DELETE FROM cafeteria_2
             WHERE year_month_date = (SELECT min(year_month_date) FROM cafeteria_2)

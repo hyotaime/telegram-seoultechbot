@@ -71,12 +71,12 @@ async def cafe2_callback(context: ContextTypes.DEFAULT_TYPE, chat_id, callback_d
 async def process_cafe2_notification(context: ContextTypes.DEFAULT_TYPE, chat_id, day, day_str):
     food_data = database.get_cafe2_menu(int(day.strftime('%y%m%d')))
     if food_data:
-        message = '{today.month}월 {today.day}일 식단\n'.format(today=day)
+        message = '{today.month}월 {today.day}일 식단\n\n'.format(today=day)
         message += (f"점심: {food_data['menu1_name']} `{food_data['menu1_price']}`\n"
-                    f"{food_data['menu1_side']}\n")
+                    f"{food_data['menu1_side']}\n\n")
         if food_data['menu2_name'] != '간단 snack':
             message += (f"점심: {food_data['menu2_name']} `{food_data['menu2_price']}`\n"
-                        f"{food_data['menu2_side']}\n")
+                        f"{food_data['menu2_side']}\n\n")
         message += (f"저녁: {food_data['dinner_name']} `{food_data['dinner_price']}`\n"
                     f"{food_data['dinner_side']}\n")
         await context.bot.send_message(
