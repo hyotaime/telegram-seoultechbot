@@ -74,7 +74,7 @@ async def process_cafe2_notification(context: ContextTypes.DEFAULT_TYPE, chat_id
         message = '{today.month}월 {today.day}일 식단\n'.format(today=day)
         message += (f"점심: {food_data['menu1_name']} `{food_data['menu1_price']}`\n"
                     f"{food_data['menu1_side']}\n")
-        if food_data[3] != '간단 snack':
+        if food_data['menu2_name'] != '간단 snack':
             message += (f"점심: {food_data['menu2_name']} `{food_data['menu2_price']}`\n"
                         f"{food_data['menu2_side']}\n")
         message += (f"저녁: {food_data['dinner_name']} `{food_data['dinner_price']}`\n"
