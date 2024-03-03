@@ -1,10 +1,11 @@
 import datetime
+from telegram.ext import ContextTypes
 from src import database
 from src.log import logger
 from src.crawlers import noticecrawler
 
 
-async def schedule_notification(application):
+async def schedule_notification(context: ContextTypes.DEFAULT_TYPE):
     logger.info('schedule_notification')
     now = datetime.datetime.now()
     schedule = noticecrawler.get_univ_schedule()
@@ -29,7 +30,7 @@ async def schedule_notification(application):
             for chat_id in chat_ids:
                 chat_id = chat_id['id']
                 try:
-                    await application.context.bot.send_message(
+                    await context.bot.send_message(
                         chat_id=chat_id,
                         text=msg
                     )

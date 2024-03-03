@@ -1,12 +1,13 @@
 import requests
 import datetime
-from bs4 import BeautifulSoup
-from src.log import logger
 import pymysql
 from functools import wraps
-from dotenv import load_dotenv
 import os
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from telegram.ext import ContextTypes
 from src import database
+from src.log import logger
 
 
 def db_connection(func):
@@ -126,7 +127,7 @@ def get_univ_schedule():
     return schedule
 
 
-async def process_notice_crawling(application):
+async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE):
     logger.info('공지사항 크롤링 시도...')
     try:
         a, b = 'notice', 'university'
@@ -164,19 +165,19 @@ async def process_notice_crawling(application):
             chat_id = chat_id['id']
             try:
                 if len(new_univ_notice) > 0:
-                    await application.context.bot.send_message(
+                    await context.bot.send_message(
                         chat_id=chat_id,
                         text=univ_notice_msg,
                         parse_mode='MarkdownV2'
                     )
                 if len(new_affairs_notice) > 0:
-                    await application.context.bot.send_message(
+                    await context.bot.send_message(
                         chat_id=chat_id,
                         text=affairs_msg,
                         parse_mode='MarkdownV2'
                     )
                 if len(new_scholarship_notice) > 0:
-                    await application.context.bot.send_message(
+                    await context.bot.send_message(
                         chat_id=chat_id,
                         text=scholarship_msg,
                         parse_mode='MarkdownV2'
@@ -196,7 +197,7 @@ async def process_notice_crawling(application):
         for chat_id_domi in chat_ids_domi:
             chat_id_domi = chat_id_domi['id']
             try:
-                await application.context.bot.send_message(
+                await context.bot.send_message(
                     chat_id=chat_id_domi,
                     text=msg,
                     parse_mode='MarkdownV2'
