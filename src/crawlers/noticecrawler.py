@@ -40,7 +40,14 @@ def get_notice(cur, board_name, table_name):
     new_notice = []
     for row in rows:
         try:
-            title = row.select('td:nth-child(2) > a')[0].text.strip()
+            title = (row.select('td:nth-child(2) > a')[0].text.strip()
+                     .replace("[", "\\[").replace("]", "\\]").replace("`", "\\`")
+                     .replace("(", '\\(').replace(")", "\\)").replace("-", "\\-")
+                     .replace("~", "\\~").replace(".", "\\.").replace("!", "\\!")
+                     .replace(">", "\\>").replace("#", "\\#").replace("+", "\\+")
+                     .replace("=", "\\=").replace("|", "\\|").replace("{", "\\{")
+                     .replace("}", "\\}").replace("_", "\\_").replace("*", "\\*")
+                     )
             author = row.select('td:nth-child(4)')[0].text.strip()
             url = row.select('td:nth-child(2) > a')[0].get('href')
             bidx = int(url.split('&')[5].strip('bidx='))
@@ -79,7 +86,14 @@ def get_domi_notice(cur):
     rows = parser.select('.list_3 > li')
     new_notice = []
     for row in rows:
-        title = row.select('a:nth-child(1)')[0].text.strip()
+        title = (row.select('a:nth-child(1)')[0].text.strip()
+                 .replace("[", "\\[").replace("]", "\\]").replace("`", "\\`")
+                 .replace("(", '\\(').replace(")", "\\)").replace("-", "\\-")
+                 .replace("~", "\\~").replace(".", "\\.").replace("!", "\\!")
+                 .replace(">", "\\>").replace("#", "\\#").replace("+", "\\+")
+                 .replace("=", "\\=").replace("|", "\\|").replace("{", "\\{")
+                 .replace("}", "\\}").replace("_", "\\_").replace("*", "\\*")
+                 )
         url = row.select('a:nth-child(1)')[0].get('href')
         bidx = int(url.split('&')[2].strip('bidx='))
         try:
