@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from commands import start, help, food, weather, dorm, ping, callback
+from commands import start, help, notice, food, weather, dorm, ping, callback
 from crawlers import foodcrawler, noticecrawler
 from src import database, log, schedule_notification
 
@@ -53,9 +53,6 @@ if __name__ == '__main__':
     help_handler = CommandHandler('help', help.help)
     application.add_handler(help_handler)
 
-    food_handler = CommandHandler('food', food.food)
-    application.add_handler(food_handler)
-
     cafe2_handler = CommandHandler('cafe2', food.cafe2)
     application.add_handler(cafe2_handler)
 
@@ -64,6 +61,12 @@ if __name__ == '__main__':
 
     weather_handler = CommandHandler('weather', weather.weather)
     application.add_handler(weather_handler)
+
+    notice_handler = CommandHandler('notice', notice.notice)
+    application.add_handler(notice_handler)
+
+    food_handler = CommandHandler('food', food.food)
+    application.add_handler(food_handler)
 
     dorm_handler = CommandHandler('dorm', dorm.dorm)
     application.add_handler(dorm_handler)

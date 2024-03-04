@@ -11,7 +11,7 @@ async def schedule_notification(context: ContextTypes.DEFAULT_TYPE):
     schedule = noticecrawler.get_univ_schedule()
     msg = (f'오늘의 일정\n'
            f'오늘 시작하거나 끝나는 학사일정입니다.\n')
-    chat_ids = database.get_all_users()
+    chat_ids = database.get_user_notice()
     if len(schedule) > 0:
         for row in schedule:
             if '\n\n' in row:

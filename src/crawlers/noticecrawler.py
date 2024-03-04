@@ -172,7 +172,7 @@ async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE):
         scholarship_msg += (f'{row[1]}\n'
                             f'[{row[0]}]({row[2]})\n')
 
-    chat_ids = database.get_all_users()
+    chat_ids = database.get_user_notice()
     if len(new_univ_notice) > 0 or len(new_affairs_notice) > 0 or len(new_scholarship_notice) > 0:
         logger.info('알림 설정한 서버들을 대상으로 새 공지사항 알림을 전송합니다.')
         for chat_id in chat_ids:

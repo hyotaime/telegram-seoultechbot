@@ -17,7 +17,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=chat_id,
         text="⚠️주의사항⚠️\n"
-             "봇 입장 후 명령어를 사용해야 학교 공지사항과 학사일정, 학식 알림을 받을 수 있습니다.\n"
+             "`/notice` 명령어를 사용해야 학교 공지사항과 학사일정 알림을 받을 수 있습니다.\n"
              "학교 공지사항은 학교 홈페이지의 대학공지사항, 학사공지, 장학공지, [선택]생활관공지를 알려드립니다.\n"
              "이외의 공지사항은 학교 홈페이지를 참고하시기 바랍니다.\n"
     )
