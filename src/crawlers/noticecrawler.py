@@ -81,7 +81,7 @@ def get_notice(cur, board_name, table_name):
 
 @db_connection
 def get_domi_notice(cur):
-    response = requests.get('https://domi.seoultech.ac.kr/do/notice/')
+    response = requests.get('https://domi.seoultech.ac.kr/do/notice/', verify=False)  # SSLError solution: verify=False
     parser = BeautifulSoup(response.text, "html.parser")
     rows = parser.select('.list_3 > li')
     new_notice = []
@@ -200,7 +200,7 @@ async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE):
                 logger.error(f'{chat_id} 채널에 알림을 보낼 수 없습니다. 예외명: {e}')
                 continue
 
-    if len(new_dormitory_notice) > 0:
+    if new_dormitory_notice is not None:
         msg = "새 생활관공지\n"
         chat_ids_domi = database.get_user_dorm_noti()
         for row in new_dormitory_notice:
