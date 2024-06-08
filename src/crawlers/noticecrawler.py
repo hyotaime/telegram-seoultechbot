@@ -102,7 +102,7 @@ def get_domi_notice(cur):
                 VALUES(%s)
             '''
             cur.execute(sql, (bidx,))
-            response = requests.get('https://domi.seoultech.ac.kr/do/notice/' + url)
+            response = requests.get('https://domi.seoultech.ac.kr/do/notice/' + url, verify=False)
             parser = BeautifulSoup(response.text, "html.parser")
             try:
                 author = parser.select('.date > span:nth-child(2) > font:nth-child(1)')[0].text
