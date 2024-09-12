@@ -141,6 +141,57 @@ def get_univ_schedule():
     return schedule
 
 
+@db_connection
+def get_com_notice(cur):
+    response = requests.get(headers={'User-Agent': 'Mozilla/5.0'},
+                            url='https://computer.seoultech.ac.kr/info_plaza/notic/')
+    parser = BeautifulSoup(response.text, "html.parser")
+    rows = parser.select('.board > tbody > tr')
+    # print(rows)
+    new_notice = []
+    for row in rows:
+        try:
+            title = (row.select('td')[1].select('a')[0].text.strip()
+                     .replace("[", "\\[").replace("]", "\\]").replace("`", "\\`")
+                     .replace("(", '\\(').replace(")", "\\)").replace("-", "\\-")
+                     .replace("~", "\\~").replace(".", "\\.").replace("!", "\\!")
+                     .replace(">", "\\>").replace("#", "\\#").replace("+", "\\+")
+                     .replace("=", "\\=").replace("|", "\\|").replace("{", "\\{")
+                     .replace("}", "\\}").replace("_", "\\_").replace("*", "\\*")
+                     )
+            author = row.select('td')[3].text.strip()
+            url = row.select('td')[1].select('a')[0].get('href')
+            bidx = int(url.split('&')[3].strip('bidx='))
+            try:
+                sql = f'''
+                   INSERT INTO com
+                   VALUES(%s)
+                   '''
+                cur.execute(sql, (bidx,))
+                new_notice.append([title, author, f'https://computer.seoultech.ac.kr/info_plaza/notic{url}'])
+            except pymysql.IntegrityError as e:
+                logger.error(e)
+                continue
+        except IndexError as e:
+            logger.error(e)
+            continue
+    sql = f'''
+           SELECT COUNT(board_index)
+           FROM com
+       '''
+    cur.execute(sql)
+    count = cur.fetchall()[0]['COUNT(board_index)']
+    while count > 2000:
+        sql = f'''
+               DELETE FROM com
+               WHERE board_index = (SELECT min(board_index) FROM com)
+           '''
+        cur.execute(sql)
+        count -= 1
+    cur.connection.commit()
+    return new_notice
+
+
 async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE):
     logger.info('공지사항 크롤링 시도...')
     try:
@@ -151,16 +202,19 @@ async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE):
         a, b = 'janghak', 'scholarship'
         new_scholarship_notice = get_notice(a, b)
         new_dormitory_notice = get_domi_notice()
+        new_com_notice = get_com_notice()
     except requests.ConnectTimeout:
         new_univ_notice = []
         new_affairs_notice = []
         new_scholarship_notice = []
         new_dormitory_notice = []
+        new_com_notice = []
         logger.error('학교 홈페이지 연결 실패. 다음 주기에 다시 시도합니다.')
 
     univ_notice_msg = "새 대학공지사항\n"
     scholarship_msg = "새 장학공지\n"
     affairs_msg = "새 학사공지\n"
+    com_notice_msg = "새 컴퓨터공학과 공지사항\n"
 
     for row in new_univ_notice:
         univ_notice_msg += (f'{row[1]}\n'
@@ -171,9 +225,12 @@ async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE):
     for row in new_scholarship_notice:
         scholarship_msg += (f'{row[1]}\n'
                             f'[{row[0]}]({row[2]})\n')
+    for row in new_com_notice:
+        com_notice_msg += (f'{row[1]}\n'
+                           f'[{row[0]}]({row[2]})\n')
 
     chat_ids = database.get_user_notice()
-    if len(new_univ_notice) > 0 or len(new_affairs_notice) > 0 or len(new_scholarship_notice) > 0:
+    if len(new_univ_notice) > 0 or len(new_affairs_notice) > 0 or len(new_scholarship_notice) > 0 or len(new_com_notice):
         logger.info('알림 설정한 서버들을 대상으로 새 공지사항 알림을 전송합니다.')
         for chat_id in chat_ids:
             chat_id = chat_id['id']
@@ -194,6 +251,12 @@ async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE):
                     await context.bot.send_message(
                         chat_id=chat_id,
                         text=scholarship_msg,
+                        parse_mode='MarkdownV2'
+                    )
+                if len(new_com_notice) > 0:
+                    await context.bot.send_message(
+                        chat_id=chat_id,
+                        text=com_notice_msg,
                         parse_mode='MarkdownV2'
                     )
             except Exception as e:
