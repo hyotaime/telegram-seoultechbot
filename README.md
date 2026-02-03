@@ -49,8 +49,8 @@ ___
 * [`database.py`](src/database.py): 데이터베이스 관리
 * [`schedule_notification.py`](src/schedule_notification.py): 학사일정 알림을 위한 코드입니다.
 * [`crawlers`](src/crawlers) directory
-  * [`foodcrawler.py`](src/crawlers/foodcrawler.py): 학교 홈페이지에서 식단을 크롤링하는 코드입니다.
-  * [`noticecrawler.py`](src/crawlers/noticecrawler.py): 학교 공지사항과 일정을 크롤링하는 코드입니다.
+  * [`foodcrawler.py`](src/crawlers/food_crawler.py): 학교 홈페이지에서 식단을 크롤링하는 코드입니다.
+  * [`noticecrawler.py`](src/crawlers/notice_crawler.py): 학교 공지사항과 일정을 크롤링하는 코드입니다.
 * [`commands`](src/commands) directory
   * [`callback.py`](src/commands/callback.py): Callback을 처리하는 모듈
   * [`dorm.py`](src/commands/dorm.py): Dormitory 명령어 모듈

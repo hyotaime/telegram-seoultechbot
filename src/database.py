@@ -1,6 +1,6 @@
 import pymysql
 from functools import wraps
-from log import logger
+from src.log import logger
 from dotenv import load_dotenv
 import os
 
@@ -68,45 +68,6 @@ def get_all_users(cur):
     '''
     cur.execute(sql)
     return cur.fetchall()
-
-@db_connection
-def get_user_notice(cur):
-    logger.info("get user notice")
-    sql = '''
-        SELECT id
-        FROM notice
-    '''
-    cur.execute(sql)
-    return cur.fetchall()
-
-
-@db_connection
-def set_user_notice(cur, chat_id):
-    logger.info("set user notice")
-    try:
-        sql = '''
-            INSERT INTO notice
-            VALUES(%s)
-        '''
-        cur.execute(sql, chat_id)
-        logger.info(f"{chat_id} INSERT success")
-    except pymysql.IntegrityError:
-        logger.info(f"{chat_id} Already exist")
-    cur.connection.commit()
-    logger.info("commit success")
-
-
-@db_connection
-def del_user_notice(cur, chat_id):
-    logger.info("del user notice")
-    sql = '''
-        DELETE FROM notice
-        WHERE id=%s
-    '''
-    cur.execute(sql, chat_id)
-    cur.connection.commit()
-    logger.info("commit success")
-
 
 @db_connection
 def get_user_dorm_noti(cur):

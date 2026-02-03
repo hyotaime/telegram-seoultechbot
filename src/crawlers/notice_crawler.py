@@ -81,7 +81,7 @@ def get_notice(cur, board_name, table_name):
 
 @db_connection
 def get_domi_notice(cur):
-    response = requests.get('https://domi.seoultech.ac.kr/do/notice/', verify=False)  # SSLError solution: verify=False
+    response = requests.get('https://domi.seoultech.ac.kr/community/notice/korean/', verify=False)  # SSLError solution: verify=False
     parser = BeautifulSoup(response.text, "html.parser")
     rows = parser.select('.list_3 > li')
     new_notice = []
@@ -102,13 +102,13 @@ def get_domi_notice(cur):
                 VALUES(%s)
             '''
             cur.execute(sql, (bidx,))
-            response = requests.get('https://domi.seoultech.ac.kr/do/notice/' + url, verify=False)
+            response = requests.get(f"https://domi.seoultech.ac.kr/community/notice/korean/{url}", verify=False)
             parser = BeautifulSoup(response.text, "html.parser")
             try:
                 author = parser.select('.date > span:nth-child(2) > font:nth-child(1)')[0].text
             except IndexError:
                 author = parser.select('.date > span:nth-child(3) > font:nth-child(1)')[0].text
-            new_notice.append([title, author, 'https://domi.seoultech.ac.kr/do/notice/' + url])
+            new_notice.append([title, author, f"https://domi.seoultech.ac.kr/community/notice/korean/{url}"])
         except pymysql.IntegrityError:
             continue
     sql = '''
@@ -142,7 +142,7 @@ def get_univ_schedule():
 
 
 @db_connection
-def get_com_notice(cur):
+def get_cse_notice(cur):
     response = requests.get(headers={'User-Agent': 'Mozilla/5.0'},
                             url='https://computer.seoultech.ac.kr/info_plaza/notic/')
     parser = BeautifulSoup(response.text, "html.parser")
@@ -164,27 +164,26 @@ def get_com_notice(cur):
             bidx = int(url.split('&')[3].strip('bidx='))
             try:
                 sql = f'''
-                   INSERT INTO com
+                   INSERT INTO cse
                    VALUES(%s)
                    '''
                 cur.execute(sql, (bidx,))
-                new_notice.append([title, author, f'https://computer.seoultech.ac.kr/info_plaza/notic{url}'])
+                new_notice.append([title, author, f"https://computer.seoultech.ac.kr/info_plaza/notic{url}"])
             except pymysql.IntegrityError as e:
-                logger.error(e)
                 continue
         except IndexError as e:
             logger.error(e)
             continue
     sql = f'''
            SELECT COUNT(board_index)
-           FROM com
+           FROM cse
        '''
     cur.execute(sql)
     count = cur.fetchall()[0]['COUNT(board_index)']
     while count > 2000:
         sql = f'''
-               DELETE FROM com
-               WHERE board_index = (SELECT min(board_index) FROM com)
+               DELETE FROM cse
+               WHERE board_index = (SELECT min(board_index) FROM cse)
            '''
         cur.execute(sql)
         count -= 1
@@ -192,8 +191,8 @@ def get_com_notice(cur):
     return new_notice
 
 
-async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE):
-    logger.info('공지사항 크롤링 시도...')
+async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE, NOTICE_CHANNEL_ID):
+    logger.info('Trying to crawl notice...')
     try:
         a, b = 'notice', 'university'
         new_univ_notice = get_notice(a, b)
@@ -202,19 +201,16 @@ async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE):
         a, b = 'janghak', 'scholarship'
         new_scholarship_notice = get_notice(a, b)
         new_dormitory_notice = get_domi_notice()
-        new_com_notice = get_com_notice()
     except requests.ConnectTimeout:
         new_univ_notice = []
         new_affairs_notice = []
         new_scholarship_notice = []
         new_dormitory_notice = []
-        new_com_notice = []
         logger.error('학교 홈페이지 연결 실패. 다음 주기에 다시 시도합니다.')
 
     univ_notice_msg = "새 대학공지사항\n"
     scholarship_msg = "새 장학공지\n"
     affairs_msg = "새 학사공지\n"
-    com_notice_msg = "새 컴퓨터공학과 공지사항\n"
 
     for row in new_univ_notice:
         univ_notice_msg += (f'{row[1]}\n'
@@ -225,60 +221,44 @@ async def process_notice_crawling(context: ContextTypes.DEFAULT_TYPE):
     for row in new_scholarship_notice:
         scholarship_msg += (f'{row[1]}\n'
                             f'[{row[0]}]({row[2]})\n')
-    for row in new_com_notice:
-        com_notice_msg += (f'{row[1]}\n'
-                           f'[{row[0]}]({row[2]})\n')
 
-    chat_ids = database.get_user_notice()
-    if len(new_univ_notice) > 0 or len(new_affairs_notice) > 0 or len(new_scholarship_notice) > 0 or len(new_com_notice):
-        logger.info('알림 설정한 서버들을 대상으로 새 공지사항 알림을 전송합니다.')
-        for chat_id in chat_ids:
-            chat_id = chat_id['id']
-            try:
-                if len(new_univ_notice) > 0:
-                    await context.bot.send_message(
-                        chat_id=chat_id,
-                        text=univ_notice_msg,
-                        parse_mode='MarkdownV2'
-                    )
-                if len(new_affairs_notice) > 0:
-                    await context.bot.send_message(
-                        chat_id=chat_id,
-                        text=affairs_msg,
-                        parse_mode='MarkdownV2'
-                    )
-                if len(new_scholarship_notice) > 0:
-                    await context.bot.send_message(
-                        chat_id=chat_id,
-                        text=scholarship_msg,
-                        parse_mode='MarkdownV2'
-                    )
-                if len(new_com_notice) > 0:
-                    await context.bot.send_message(
-                        chat_id=chat_id,
-                        text=com_notice_msg,
-                        parse_mode='MarkdownV2'
-                    )
-            except Exception as e:
-                logger.error(f'{chat_id} 채널에 알림을 보낼 수 없습니다. 예외명: {e}')
-                continue
+    logger.info(f'Sending new notification')
+    if len(new_univ_notice) > 0 or len(new_affairs_notice) > 0 or len(new_scholarship_notice) > 0:
+        try:
+            if len(new_univ_notice) > 0:
+                await context.bot.send_message(
+                    chat_id=NOTICE_CHANNEL_ID,
+                    text=univ_notice_msg,
+                    parse_mode='MarkdownV2'
+                )
+            if len(new_affairs_notice) > 0:
+                await context.bot.send_message(
+                    chat_id=NOTICE_CHANNEL_ID,
+                    text=affairs_msg,
+                    parse_mode='MarkdownV2'
+                )
+            if len(new_scholarship_notice) > 0:
+                await context.bot.send_message(
+                    chat_id=NOTICE_CHANNEL_ID,
+                    text=scholarship_msg,
+                    parse_mode='MarkdownV2'
+                )
+        except Exception as e:
+            logger.error(f'Cannot send notification to {NOTICE_CHANNEL_ID}. Error: {e}')
 
+    return
     if new_dormitory_notice is not None:
         msg = "새 생활관공지\n"
-        chat_ids_domi = database.get_user_dorm_noti()
         for row in new_dormitory_notice:
             msg += (f'{row[1]}\n'
                     f'[{row[0]}]({row[2]})\n')
 
-        logger.info('알림 설정한 서버들을 대상으로 새 생활관공지 알림을 전송합니다.')
-        for chat_id_domi in chat_ids_domi:
-            chat_id_domi = chat_id_domi['id']
-            try:
-                await context.bot.send_message(
-                    chat_id=chat_id_domi,
-                    text=msg,
-                    parse_mode='MarkdownV2'
-                )
-            except Exception as e:
-                logger.error(f'{chat_id_domi} 채널에 알림을 보낼 수 없습니다. 예외명: {e}')
-                continue
+        logger.info(f'Sending new dormitory notification')
+        try:
+            await context.bot.send_message(
+                chat_id=NOTICE_CHANNEL_ID,
+                text=msg,
+                parse_mode='MarkdownV2'
+            )
+        except Exception as e:
+            logger.error(f'Cannot send dorm notices to {NOTICE_CHANNEL_ID}. Error: {e}')
