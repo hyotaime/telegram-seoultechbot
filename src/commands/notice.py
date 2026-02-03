@@ -9,5 +9,5 @@ async def notice(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=chat_id,
         text="Now sending notification to individual accounts is deprecated.\n"
-             "Please use the @seoultech_notice to get notification.",
+             "Please use the @seoultech_notice channel to get notification.",
     )
